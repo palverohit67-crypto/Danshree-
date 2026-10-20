@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday Danshree</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 35%, #071530 0%, #030a17 55%, #01040a 100%);
+      min-height: 100vh; width: 100vw; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative;
+    }
+    #canvas-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .title-banner { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); z-index: 30; text-align: center; width: 90%; max-width: 600px; }
+    .occasion-badge { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #ffd85f; background: rgba(255,216,95,0.12); border: 1px solid rgba(255,216,95,0.35); padding: 3px 12px; border-radius: 999px; margin-bottom: 6px; display: inline-block; }
+    .title-banner h1 { font-size: clamp(1.5rem, 4vw, 2.4rem); font-weight: 800; text-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+    .glowing-text { color: #ffd85f; text-shadow: 0 0 15px rgba(255,216,95,0.7); }
+    .subtext { font-size: clamp(0.8rem, 2vw, 0.95rem); color: rgba(255,255,255,0.8); margin-top: 6px; }
+
+    .wish-modal {
+      position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+      width: 90%; max-width: 400px; background: rgba(10, 20, 38, 0.85); backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 216, 95, 0.4); border-radius: 22px; padding: 26px 20px; text-align: center;
+      z-index: 45; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px rgba(255,140,40,0.2);
+    }
+    .wish-modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+    .wish-modal h2 { font-size: 1.35rem; color: #ffe4a0; margin-bottom: 10px; }
+    .wish-modal p { font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.9); margin-bottom: 16px; }
+    .wish-modal__btn { background: linear-gradient(135deg, #ffd85f 0%, #ff7b1a 100%); border: none; color: #050b16; font-weight: 700; padding: 9px 20px; border-radius: 999px; cursor: pointer; }
+
+    .floating-wish {
+      position: absolute; pointer-events: none; z-index: 60; color: #ffe4a0; font-weight: 700; font-size: 0.9rem;
+      background: rgba(10, 20, 38, 0.7); border: 1px solid rgba(255,216,95,0.4); padding: 4px 12px; border-radius: 999px;
+      animation: floatUp 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes floatUp {
+      0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+      20% { transform: translate(-50%, -75%) scale(1.05); opacity: 1; }
+      100% { transform: translate(-50%, -180%) scale(0.9); opacity: 0; }
+    }
+
+    .controls-panel {
+      position: absolute; bottom: 20px; z-index: 35; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      background: rgba(10, 20, 38, 0.65); backdrop-filter: blur(10px); padding: 7px 14px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    .controls-panel button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 0.8rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+    .controls-panel button.btn-highlight { background: rgba(255,180,60,0.22); border-color: rgba(255,216,95,0.55); color: #ffe4a0; }
+
+    .garden-stage { position: relative; width: 100%; height: 100vh; max-width: 1200px; overflow: hidden; z-index: 10; display: flex; justify-content: center; }
+    .ground-shadow { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: linear-gradient(to top, rgba(1,4,10,0.95) 0%, transparent 100%); pointer-events: none; z-index: 25; }
+
+    .flower { position: absolute; bottom: 0; transform-origin: bottom center; cursor: pointer; z-index: 12; }
+    .flower__stem {
+      width: var(--stem-w, 6px); height: var(--stem-h, 300px);
+      background: linear-gradient(to top, #183e16 0%, #295e26 50%, #e6a132 100%);
+      border-radius: 4px; margin: 0 auto; position: relative; transform-origin: bottom center; transform: scaleY(0);
+      animation: growStem 2.5s cubic-bezier(0.22, 1, 0.36, 1) var(--delay) forwards;
+    }
+    .flower__head { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%) scale(0); width: var(--head-size, 140px); height: var(--head-size, 140px); animation: bloomHead 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--delay) + 1.5s) forwards; }
+    .flower__center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%;
+      background: radial-gradient(circle, #fff 15%, #ffd85f 50%, #ff5213 100%); box-shadow: 0 0 20px #ffe4a0; z-index: 10;
+    }
+    .flower__petal {
+      position: absolute; top: 50%; left: 50%; width: 42px; height: 64px; transform-origin: 0 0;
+      border-radius: 0px 100% 50% 100% / 0px 100% 30% 100%;
+      background: linear-gradient(135deg, #ffe4a0 0%, #ffd85f 30%, #ff7b1a 70%, #ff4514 100%);
+      box-shadow: 0 0 12px rgba(255,140,40,0.6);
+    }
+    .p1{transform:rotate(0deg)} .p2{transform:rotate(45deg)} .p3{transform:rotate(90deg)} .p4{transform:rotate(135deg)}
+    .p5{transform:rotate(180deg)} .p6{transform:rotate(225deg)} .p7{transform:rotate(270deg)} .p8{transform:rotate(315deg)}
+
+    @keyframes growStem { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+    @keyframes bloomHead { 0% { transform: translate(-50%, -50%) scale(0) rotate(-30deg); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; } }
+    @keyframes sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-1.5deg); } }
+    
+    .click-spark {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #ffd85f; pointer-events: none; z-index: 50;
+      animation: sparkFly 0.7s ease-out forwards;
+    }
+    @keyframes sparkFly {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.5); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas-stars"></canvas>
+
+  <header class="title-banner">
+    <div class="occasion-badge">✨ Special Celebration ✨</div>
+    <h1><span class="glowing-text">Happy Birthday,</span> Danshree! 🌸</h1>
+    <div class="subtext">May your life bloom with endless joy and glowing moments.</div>
+  </header>
+
+  <aside class="wish-modal active" id="wish-modal">
+    <h2>Happy Birthday, Danshree! 🎂</h2>
+    <p>May every dream you hold close to your heart blossom into reality. Tap any glowing flower for a special wish!</p>
+    <button class="wish-modal__btn" id="btn-celebrate">Make a Wish! 🎉</button>
+  </aside>
+
+  <main class="garden-stage" id="garden-stage">
+    <div class="ground-shadow"></div>
+  </main>
+
+  <nav class="controls-panel">
+    <button id="btn-wish-card" class="btn-highlight">Wish Card</button>
+    <button id="btn-replay">Replay Bloom</button>
+    <button id="btn-audio">Melody: Off</button>
+  </nav>
+
+  <script>
+    const specs = [
+      { id: '1', left: '25%', stemH: 400, delay: 0.2, sway: 5.5 },
+      { id: '2', left: '45%', stemH: 350, delay: 0.6, sway: 6.0 },
+      { id: '3', left: '60%', stemH: 430, delay: 0.4, sway: 5.2 },
+      { id: '4', left: '75%', stemH: 370, delay: 0.8, sway: 5.8 }
+    ];
+
+    const blessings = ["Happy Birthday, Danshree! 🎂", "Keep Shining! ✨", "Endless Joy 💖", "Stay Magical! 🦋"];
+    let bIndex = 0;
+    const stage = document.getElementById('garden-stage');
+    const modal = document.getElementById('wish-modal');
+    let audioCtx = null, playing = false;
+
+    function spawnWish(x, y) {
+      const el = document.createElement('div');
+      el.className = 'floating-wish';
+      el.textContent = blessings[bIndex % blessings.length];
+      bIndex++;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }
+
+    function spark(x, y) {
+      for (let i = 0; i < 12; i++) {
+        const s = document.createElement('div');
+        s.className = 'click-spark';
+        s.style.left = x + 'px'; s.style.top = y + 'px';
+        const angle = (i / 12) * Math.PI * 2;
+        const d = 30 + Math.random() * 50;
+        s.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+        s.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 700);
+      }
+    }
+
+    function buildGarden() {
+      stage.querySelectorAll('.flower').forEach(f => f.remove());
+      specs.forEach(s => {
+        const f = document.createElement('div');
+        f.className = 'flower';
+        f.style.left = s.left;
+        f.style.animation = `sway ${s.sway}s infinite ease-in-out`;
+        
+        const stem = document.createElement('div');
+        stem.className = 'flower__stem';
+        stem.style.setProperty('--stem-h', s.stemH + 'px');
+        stem.style.setProperty('--delay', s.delay + 's');
+
+        const head = document.createElement('div');
+        head.className = 'flower__head';
+        head.innerHTML = '<div class="flower__center"></div>';
+        for (let p = 1; p <= 8; p++) {
+          const petal = document.createElement('div');
+          petal.className = `flower__petal p${p}`;
+          head.appendChild(petal);
+        }
+
+        stem.appendChild(head);
+        f.appendChild(stem);
+        
+        f.addEventListener('click', (e) => {
+          spark(e.clientX, e.clientY);
+          spawnWish(e.clientX, e.clientY);
+          playChime(500);
+        });
+        stage.appendChild(f);
+      });
+    }
+
+    function playChime(freq) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 1.6);
+    }
+
+    // Stars background
+    const canvas = document.getElementById('canvas-stars');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function drawStars() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#fff";
+      ctx.globalAlpha = 0.6;
+      ctx.fillRect(50, 50, 2, 2);
+      ctx.fillRect(200, 150, 1.5, 1.5);
+      ctx.fillRect(400, 80, 2, 2);
+      ctx.fillRect(600, 200, 1, 1);
+      requestAnimationFrame(drawStars);
+    }
+    drawStars();
+
+    document.getElementById('btn-replay').addEventListener('click', buildGarden);
+    document.getElementById('btn-wish-card').addEventListener('click', () => modal.classList.toggle('active'));
+    document.getElementById('btn-celebrate').addEventListener('click', () => {
+      modal.classList.remove('active');
+      spark(window.innerWidth/2, window.innerHeight/2);
+      spawnWish(window.innerWidth/2, window.innerHeight/2 - 50);
+    });
+    document.getElementById('btn-audio').addEventListener('click', () => {
+      playing = !playing;
+      document.getElementById('btn-audio').textContent = playing ? 'Melody: On' : 'Melody: Off';
+      if(playing) playChime(440);
+    });
+
+    buildGarden();
+  </script>
+</body>
+</html>
